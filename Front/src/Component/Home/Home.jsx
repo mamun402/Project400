@@ -12,9 +12,8 @@ const Home = () => {
     <>
       <Hero />
       <About />
-      <Notice />
+      <Event showPreviousEvents={false} />
       <Gallery />
-      <Event />
       <Committee />
       <TestimonialSlider />
     </>

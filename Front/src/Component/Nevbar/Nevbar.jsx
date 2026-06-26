@@ -135,12 +135,12 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden bg-white shadow-lg">
+        <div className="md:hidden bg-white shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <MobileNavLink to="/" setOpen={setOpen}>
             Home
           </MobileNavLink>
-          <MobileNavLink to="/about" setOpen={setOpen}>
-            About
+          <MobileNavLink to="/event" setOpen={setOpen}>
+            Event
           </MobileNavLink>
           <MobileNavLink to="/committee" setOpen={setOpen}>
             Committee
@@ -192,7 +192,7 @@ const Navbar = () => {
             </>
           ) : (
             <MobileNavLink to="/login" setOpen={setOpen}>
-              Login
+              Members Login
             </MobileNavLink>
           )}
         </div>

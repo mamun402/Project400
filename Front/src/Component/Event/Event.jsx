@@ -79,19 +79,19 @@ const Countdown = ({ event }) => {
 
   return (
     <div className="text-center mt-4">
-      <p className="text-xl font-semibold">Time Remaining</p>
-      <div className="flex flex-wrap justify-center items-center gap-6 mt-4">
-        <div className="bg-primary p-4 rounded-lg">
-          <p className="text-2xl font-bold text-white">{timeLeft.days || 0} Days</p>
+      <p className="text-lg sm:text-xl font-semibold">Time Remaining</p>
+      <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 md:gap-6 mt-4">
+        <div className="bg-primary px-3 py-3 sm:px-4 rounded-lg min-w-[100px] sm:min-w-[120px]">
+          <p className="text-lg sm:text-2xl font-bold text-white">{timeLeft.days || 0} Days</p>
         </div>
-        <div className="bg-primary p-4 rounded-lg">
-          <p className="text-2xl font-bold text-white">{timeLeft.hours || 0} Hours</p>
+        <div className="bg-primary px-3 py-3 sm:px-4 rounded-lg min-w-[100px] sm:min-w-[120px]">
+          <p className="text-lg sm:text-2xl font-bold text-white">{timeLeft.hours || 0} Hours</p>
         </div>
-        <div className="bg-primary p-4 rounded-lg">
-          <p className="text-2xl font-bold text-white">{timeLeft.minutes || 0} Min</p>
+        <div className="bg-primary px-3 py-3 sm:px-4 rounded-lg min-w-[100px] sm:min-w-[120px]">
+          <p className="text-lg sm:text-2xl font-bold text-white">{timeLeft.minutes || 0} Min</p>
         </div>
-        <div className="bg-primary p-4 rounded-lg">
-          <p className="text-2xl font-bold text-white">{timeLeft.seconds || 0} Sec</p>
+        <div className="bg-primary px-3 py-3 sm:px-4 rounded-lg min-w-[100px] sm:min-w-[120px]">
+          <p className="text-lg sm:text-2xl font-bold text-white">{timeLeft.seconds || 0} Sec</p>
         </div>
       </div>
     </div>
@@ -99,17 +99,17 @@ const Countdown = ({ event }) => {
 };
 
 const EventCard = ({ event }) => (
-  <div className="flex w-full max-w-5xl min-h-[20rem] items-stretch gap-6 bg-white rounded-lg shadow-lg p-6">
+  <div className="flex w-full max-w-5xl flex-col md:flex-row items-stretch gap-4 md:gap-6 bg-white rounded-lg shadow-lg p-4 sm:p-6">
     <img
       src={event?.imgUrl}
       alt={event?.eventname}
-      className="w-72 h-72 object-cover rounded-md shadow-lg self-start"
+      className="w-full h-56 md:w-72 md:h-72 object-cover rounded-md shadow-lg self-start"
     />
     <div className="flex-1 text-left">
-      <h4 className="text-2xl font-semibold text-gray-900 mb-2">
+      <h4 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
         {event?.eventname}
       </h4>
-      <p className="text-lg text-gray-700 mb-3 max-h-28 overflow-hidden">
+      <p className="text-base sm:text-lg text-gray-700 mb-3 max-h-28 overflow-hidden">
         {event?.description}
       </p>
       <p className="text-sm text-gray-500 italic">
@@ -120,7 +120,7 @@ const EventCard = ({ event }) => (
   </div>
 );
 
-const Event = () => {
+const Event = ({ showPreviousEvents = true }) => {
   const [events, setEvents] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -236,12 +236,12 @@ const Event = () => {
   const currentEvent = upcomingEvents[currentIndex];
 
   return (
-    <section className="relative py-16 px-6 bg-gradient-to-r from-blue-50 to-blue-100">
+    <section className="relative py-12 sm:py-16 px-4 sm:px-6 bg-gradient-to-r from-blue-50 to-blue-100">
       <div className="max-w-7xl mx-auto text-center">
         <h3 className="text-secondary font-semibold text-sm uppercase tracking-widest flex justify-center items-center gap-2">
           <span>*</span> Upcoming Events <span>*</span>
         </h3>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-snug mt-3">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-snug mt-3">
           Join Our Exciting <span className="text-primary">Tech Events</span>!
         </h2>
 
@@ -250,7 +250,7 @@ const Event = () => {
             <Countdown event={currentEvent} />
 
             <div
-              className="mt-8 flex justify-between items-center gap-4"
+              className="mt-8 flex flex-col md:flex-row md:justify-between items-center gap-4"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -260,7 +260,7 @@ const Event = () => {
                 onClick={goToPrev}
                 disabled={upcomingEvents.length < 2}
                 aria-label="Previous event"
-                className="bg-white text-blue-600 hover:text-blue-800 shadow rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200 disabled:opacity-50"
+                className="hidden md:flex bg-white text-blue-600 hover:text-blue-800 shadow rounded-full w-10 h-10 items-center justify-center transition-colors duration-200 disabled:opacity-50"
               >
                 &lt;
               </button>
@@ -272,7 +272,7 @@ const Event = () => {
                 onClick={goToNext}
                 disabled={upcomingEvents.length < 2}
                 aria-label="Next event"
-                className="bg-white text-blue-600 hover:text-blue-800 shadow rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200 disabled:opacity-50"
+                className="hidden md:flex bg-white text-blue-600 hover:text-blue-800 shadow rounded-full w-10 h-10 items-center justify-center transition-colors duration-200 disabled:opacity-50"
               >
                 &gt;
               </button>
@@ -298,7 +298,7 @@ const Event = () => {
           </p>
         )}
 
-        {previousEvents.length > 0 && (
+        {showPreviousEvents && previousEvents.length > 0 && (
           <div className="mt-16 text-left">
             <h3 className="text-3xl font-extrabold text-gray-900 text-center">
               Previous <span className="text-primary">Events</span>

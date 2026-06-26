@@ -66,8 +66,8 @@ const TestimonialSlider = () => {
       </div>
 
       {/* Testimonial Slider */}
-      <div className="max-w-7xl mx-auto flex justify-center items-center relative">
-        <div className="w-full bg-white p-8 rounded-xl shadow-xl transition-all duration-500 ease-in-out transform hover:scale-105">
+      <div className="max-w-7xl mx-auto flex flex-col items-center relative">
+        <div className="w-full bg-white p-6 sm:p-8 rounded-xl shadow-xl transition-all duration-500 ease-in-out transform hover:scale-105">
           {/* Sliding Animation */}
           <div
             className="opacity-0 transition-opacity duration-700 absolute inset-0 bg-gray-100 rounded-xl"
@@ -76,25 +76,51 @@ const TestimonialSlider = () => {
             }}
           ></div>
 
-          <div className="flex justify-center mb-6 mt-12">
+          <div className="flex justify-center mb-6 mt-6 sm:mt-12">
             <img
               src={testimonials[currentTestimonial].image}
               alt={testimonials[currentTestimonial].name}
-              className="w-32 h-32 object-cover rounded-full shadow-lg border-4 border-primary"
+              className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-lg border-4 border-primary"
             />
           </div>
-          <h3 className="text-xl font-semibold text-gray-800">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800 break-words px-2">
             {testimonials[currentTestimonial].name}
           </h3>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600 break-words px-2">
             {testimonials[currentTestimonial].designation}
           </p>
-          <p className="mt-4 text-gray-500 italic text-lg">
+          <p className="mt-4 text-gray-500 italic text-base sm:text-lg break-words px-2">
             "{testimonials[currentTestimonial].testimonial}"
           </p>
         </div>
 
         {/* Navigation Arrows */}
+        <div className="mt-4 flex justify-center gap-4 sm:hidden">
+          <button
+            onClick={() =>
+              setCurrentTestimonial(
+                (currentTestimonial - 1 + testimonials.length) %
+                  testimonials.length
+              )
+            }
+            className="bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+            aria-label="Previous testimonial"
+          >
+            &lt;
+          </button>
+          <button
+            onClick={() =>
+              setCurrentTestimonial(
+                (currentTestimonial + 1) % testimonials.length
+              )
+            }
+            className="bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+            aria-label="Next testimonial"
+          >
+            &gt;
+          </button>
+        </div>
+
         <button
           onClick={() =>
             setCurrentTestimonial(
@@ -102,17 +128,17 @@ const TestimonialSlider = () => {
                 testimonials.length
             )
           }
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+          className="hidden sm:flex absolute left-4 top-1/2 transform -translate-y-1/2 bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+          aria-label="Previous testimonial"
         >
           &lt;
         </button>
         <button
           onClick={() =>
-            setCurrentTestimonial(
-              (currentTestimonial + 1) % testimonials.length
-            )
+            setCurrentTestimonial((currentTestimonial + 1) % testimonials.length)
           }
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+          className="hidden sm:flex absolute right-4 top-1/2 transform -translate-y-1/2 bg-primary text-white p-3 rounded-full hover:bg-primary-dark transition-all duration-300"
+          aria-label="Next testimonial"
         >
           &gt;
         </button>

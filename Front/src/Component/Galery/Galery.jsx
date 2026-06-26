@@ -40,7 +40,7 @@ const Gallery = () => {
           <span>★</span> Gallery <span>★</span>
         </h3>
         <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-snug mt-3">
-          Capturing <span className="text-primary">Moments</span> of Impact
+          Captured <span className="text-primary">Moments</span> of Impact
         </h2>
         <p className="text-gray-700 text-lg mt-5 leading-relaxed max-w-2xl mx-auto">
           Explore the impactful moments from our missionary work, where each
