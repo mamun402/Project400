@@ -6,7 +6,7 @@ const NoticeSchema = mongoose.Schema({
     unique: true,
     required: true,
   },
-    noticeTitle: {
+  noticeTitle: {
     type: "string",
     require: "true",
   },
@@ -18,7 +18,6 @@ const NoticeSchema = mongoose.Schema({
   imgUrl: {
     type: String,
     required: true,
-   
   },
   category:{
     type: String,
@@ -28,6 +27,6 @@ const NoticeSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 NoticeSchema.plugin(uniqueValidator);
 module.exports = NoticeSchema;
