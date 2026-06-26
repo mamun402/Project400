@@ -1,5 +1,11 @@
 import React from "react";
-import { FaFacebookF, FaLinkedinIn, FaTwitter, FaInstagram } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaGithub,
+  FaInstagram,
+  FaLinkedin,
+  FaTwitter,
+} from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -8,7 +14,7 @@ const Footer = () => {
       <div className="absolute top-10 left-6 w-10 h-10 bg-primary rounded-full blur-xl opacity-30 animate-pulse"></div>
       <div className="absolute bottom-16 right-10 w-14 h-14 bg-secondary rounded-full blur-xl opacity-20 animate-pulse"></div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center md:text-left">
         {/* Left Side - About Section */}
         <div className="space-y-6 text-gray-800">
           <h3 className="text-3xl font-extrabold text-primary">About Us</h3>
@@ -71,7 +77,7 @@ const Footer = () => {
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-blue-600 transition-all duration-300"
             >
-              <FaFacebookF className="text-4xl" />
+              <FaFacebook className="text-4xl" />
             </a>
             <a
               href="https://www.instagram.com/mucses"
@@ -89,6 +95,79 @@ const Footer = () => {
             >
               <FaTwitter className="text-4xl" />
             </a>
+          </div>
+        </div>
+
+        {/* Developers */}
+        <div className="space-y-6 text-gray-800">
+          <h3 className="text-3xl font-extrabold text-primary">Developed By:</h3>
+          <div className="space-y-5">
+            <div>
+              <h4 className="text-lg font-bold">Mamun Ahmed</h4>
+              <p className="text-sm text-gray-600">
+                General Secretary, MU CSE Society 2023-24
+              </p>
+              <p className="text-sm text-gray-600">CSE 54 Batch</p>
+              <div className="flex justify-center md:justify-start gap-4 mt-3">
+                <a
+                  href="https://www.linkedin.com/in/mamun02/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Mamun Ahmed LinkedIn profile"
+                >
+                  <FaLinkedin className="text-blue-500 text-xl" />
+                </a>
+                <a
+                  href="https://www.github.com/mamun402"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Mamun Ahmed GitHub profile"
+                >
+                  <FaGithub className="text-gray-800 text-xl" />
+                </a>
+                <a
+                  href="https://www.facebook.com/mrbiillah"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Mamun Ahmed Facebook profile"
+                >
+                  <FaFacebook className="text-blue-600 text-xl" />
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-bold">Ruksana Islam Rimu</h4>
+              <p className="text-sm text-gray-600">
+                Office Secretary, MU CSE Society 2023-24
+              </p>
+              <p className="text-sm text-gray-600">CSE 54 Batch</p>
+              <div className="flex justify-center md:justify-start gap-4 mt-3">
+                <a
+                  href="https://www.linkedin.com/in/rimu7/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Ruksana Islam Rimu LinkedIn profile"
+                >
+                  <FaLinkedin className="text-blue-500 text-xl" />
+                </a>
+                <a
+                  href="https://www.github.com/ruksanaislamrimu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Ruksana Islam Rimu GitHub profile"
+                >
+                  <FaGithub className="text-gray-800 text-xl" />
+                </a>
+                <a
+                  href="https://www.facebook.com/ruksana.rimu.1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Ruksana Islam Rimu Facebook profile"
+                >
+                  <FaFacebook className="text-blue-600 text-xl" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
