@@ -40,7 +40,8 @@ const AddEvent = () => {
       !info.organizer ||
       !info.description ||
       !info.eventDate ||
-      !info.eventTime
+      !info.eventTime ||
+      !file
     ) {
       alert("Please fill in all fields.");
       setLoading(false);
@@ -98,7 +99,7 @@ const AddEvent = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Event Name
+              Event Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -111,7 +112,7 @@ const AddEvent = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Organizer
+              Organizer <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -124,7 +125,7 @@ const AddEvent = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -136,7 +137,7 @@ const AddEvent = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Event Date
+              Event Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
@@ -148,7 +149,7 @@ const AddEvent = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Event Time
+              Event Time <span className="text-red-500">*</span>
             </label>
             <input
               type="time"
@@ -186,7 +187,7 @@ const AddEvent = () => {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <span className="text-gray-600">Upload Event Poster</span>
+              <span className="text-gray-600">Upload Event Poster <span className="text-red-500">*</span></span>
             </label>
           </div>
           <button

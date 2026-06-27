@@ -124,6 +124,7 @@ const Event = ({ showPreviousEvents = true }) => {
   const [events, setEvents] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [now, setNow] = useState(() => new Date());
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const touchStartXRef = useRef(null);
   const touchEndXRef = useRef(null);
 
@@ -198,6 +199,14 @@ const Event = ({ showPreviousEvents = true }) => {
 
   const goToIndex = (index) => {
     setCurrentIndex(index);
+  };
+
+  const openEventDetails = (event) => {
+    setSelectedEvent(event);
+  };
+
+  const closeEventDetails = () => {
+    setSelectedEvent(null);
   };
 
   const handleTouchStart = (event) => {
@@ -305,9 +314,11 @@ const Event = ({ showPreviousEvents = true }) => {
             </h3>
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
               {previousEvents.map((event) => (
-                <div
+                <button
                   key={event._id || event.id || event.eventname}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                  type="button"
+                  onClick={() => openEventDetails(event)}
+                  className="group text-left bg-white rounded-lg shadow-lg overflow-hidden transition duration-200 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                   <img
                     src={event.imgUrl}
@@ -325,13 +336,61 @@ const Event = ({ showPreviousEvents = true }) => {
                       {event.eventTime}
                       {event.eventDate ? ` • ${formatEventDate(event.eventDate)}` : ""}
                     </p>
+                    <span className="mt-4 inline-flex items-center text-sm font-semibold text-primary group-hover:underline">
+                      Read full details →
+                    </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {selectedEvent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6"
+          onClick={closeEventDetails}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeEventDetails}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 px-3 py-2 text-xl text-gray-700 shadow hover:bg-gray-100"
+              aria-label="Close event details"
+            >
+              ×
+            </button>
+
+            <img
+              src={selectedEvent.imgUrl}
+              alt={selectedEvent.eventname}
+              className="h-72 w-full object-cover object-center"
+            />
+
+            <div className="p-8">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
+                Event Highlights
+              </p>
+              <h4 className="mt-2 text-3xl font-bold text-gray-900 font-serif">
+                {selectedEvent.eventname}
+              </h4>
+              <p className="mt-3 text-sm text-gray-600 italic">
+                {selectedEvent.eventTime || "Time not specified"} •{" "}
+                {selectedEvent.eventDate
+                  ? formatEventDate(selectedEvent.eventDate)
+                  : "Date not specified"}
+              </p>
+              <div className="mt-6 whitespace-pre-wrap text-[16px] leading-relaxed text-gray-800">
+                {selectedEvent.description || "No details available for this event."}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -1,6 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PhoneInput, { getPhoneError } from "../Common/PhoneInput";
+import ProfilePhotoPlaceholder from "../Common/ProfilePhotoPlaceholder";
 
 const AddExecutiveCouncil = () => {
   const navigate = useNavigate();
@@ -48,25 +50,65 @@ const AddExecutiveCouncil = () => {
     }
   };
 
+  const validateFields = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const fullName = formData.fullName.trim();
+    const email = formData.email.trim();
+    const password = formData.password;
+    const confirmPassword = formData.confirmPassword;
+
+    if (!fullName) {
+      errors.fullName = "Full name is required";
+    } else if (!/^[A-Za-z][A-Za-z .'-]{1,}$/.test(fullName)) {
+      errors.fullName = "Enter a valid full name";
+    }
+
+    if (!email) {
+      errors.email = "Email is required";
+    } else if (!emailRegex.test(email)) {
+      errors.email = "Enter a valid email address";
+    }
+
+    if (!password) {
+      errors.password = "Password is required";
+    } else if (password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)) {
+      errors.password = "Password must contain uppercase, lowercase, and a number";
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (confirmPassword !== password) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!formData.permanentAddress.trim()) errors.permanentAddress = "Permanent address is required";
+    if (!formData.currentAddress.trim()) errors.currentAddress = "Current address is required";
+    if (!formData.designation) errors.designation = "Designation is required";
+    if (!formData.profileImage) errors.profileImage = "Profile image is required";
+
+    const mobileError = getPhoneError(formData.mobile, "Mobile number", true);
+    if (mobileError) errors.mobile = mobileError;
+
+    const whatsappError = getPhoneError(formData.whatsapp, "WhatsApp number");
+    if (whatsappError) errors.whatsapp = whatsappError;
+
+    if (formData.startDate && formData.endDate && new Date(formData.endDate) < new Date(formData.startDate)) {
+      errors.endDate = "End date cannot be before start date";
+    }
+
+    return errors;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     setPasswordError("");
     setFieldErrors({});
 
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return;
-    }
-
-    // Validate mobile number: 11 digits starting with 017, 018, 019, 016, 013, or 014
-    const errors = {};
-    if (formData.mobile && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.mobile)) {
-      errors.mobile = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
-    }
-    if (formData.whatsapp && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.whatsapp)) {
-      errors.whatsapp = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
-    }
+    const errors = validateFields();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -91,6 +133,9 @@ const AddExecutiveCouncil = () => {
         }
       })
       .catch((error) => {
+        if (error.response?.data?.errors) {
+          setFieldErrors(error.response.data.errors);
+        }
         setVisibleR(true);
         console.error("There was an error!", error);
       });
@@ -138,75 +183,88 @@ const AddExecutiveCouncil = () => {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-5"
         >
-          <input
-            type="text"
-            name="fullName"
-            placeholder="Full Name"
-            value={formData.fullName}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="text"
+          <div className="space-y-1">
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name *"
+              value={formData.fullName}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {fieldErrors.fullName && <p className="text-red-500 text-sm">{fieldErrors.fullName}</p>}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email *"
+              value={formData.email}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {fieldErrors.email && <p className="text-red-500 text-sm">{fieldErrors.email}</p>}
+          </div>
+          <PhoneInput
+            label="Mobile Number"
             name="mobile"
-            placeholder="Mobile Number"
             value={formData.mobile}
             onChange={handleChange}
-            className={inputClass}
             required
+            error={fieldErrors.mobile}
           />
-          {fieldErrors.mobile && <p className="text-red-500 text-sm">{fieldErrors.mobile}</p>}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          {passwordError && (
-            <p className="text-red-500 text-sm col-span-2 -mt-3">
-              {passwordError}
-            </p>
-          )}
-          <input
-            type="text"
-            name="permanentAddress"
-            placeholder="Permanent Address"
-            value={formData.permanentAddress}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-          <input
-            type="text"
-            name="currentAddress"
-            placeholder="Current Address"
-            value={formData.currentAddress}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
+          <div className="space-y-1">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password *"
+              value={formData.password}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {fieldErrors.password && <p className="text-red-500 text-sm">{fieldErrors.password}</p>}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password *"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {(fieldErrors.confirmPassword || passwordError) && (
+              <p className="text-red-500 text-sm">{fieldErrors.confirmPassword || passwordError}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="text"
+              name="permanentAddress"
+              placeholder="Permanent Address *"
+              value={formData.permanentAddress}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {fieldErrors.permanentAddress && <p className="text-red-500 text-sm">{fieldErrors.permanentAddress}</p>}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="text"
+              name="currentAddress"
+              placeholder="Current Address *"
+              value={formData.currentAddress}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
+            {fieldErrors.currentAddress && <p className="text-red-500 text-sm">{fieldErrors.currentAddress}</p>}
+          </div>
           <input
             type="text"
             name="linkedinId"
@@ -223,22 +281,22 @@ const AddExecutiveCouncil = () => {
             onChange={handleChange}
             className={inputClass}
           />
-          <input
-            type="text"
+          <PhoneInput
+            label="WhatsApp Number"
             name="whatsapp"
-            placeholder="WhatsApp Number"
             value={formData.whatsapp}
             onChange={handleChange}
-            className={inputClass}
+            error={fieldErrors.whatsapp}
           />
-          <select
-            name="designation"
-            value={formData.designation}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          >
-            <option value="">Select Designation</option>
+          <div className="space-y-1">
+            <select
+              name="designation"
+              value={formData.designation}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            >
+            <option value="">Select Designation *</option>
             <option value="Chief Patron">Chief Patron</option>
             <option value="Patron">Patron</option>
             <option value="Chief Advisor">Chief Advisor</option>
@@ -246,7 +304,9 @@ const AddExecutiveCouncil = () => {
             <option value="President">President</option>
             <option value="Treasurer">Treasurer</option>
             <option value="Student Advisor">Student Advisor</option>
-          </select>
+            </select>
+            {fieldErrors.designation && <p className="text-red-500 text-sm">{fieldErrors.designation}</p>}
+          </div>
 
           <input
             type="date"
@@ -255,13 +315,16 @@ const AddExecutiveCouncil = () => {
             onChange={handleChange}
             className={inputClass}
           />
-          <input
-            type="date"
-            name="endDate"
-            value={formData.endDate}
-            onChange={handleChange}
-            className={inputClass}
-          />
+          <div className="space-y-1">
+            <input
+              type="date"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              className={inputClass}
+            />
+            {fieldErrors.endDate && <p className="text-red-500 text-sm">{fieldErrors.endDate}</p>}
+          </div>
 
           <div className="col-span-2">
             {imagePreview && (
@@ -273,7 +336,8 @@ const AddExecutiveCouncil = () => {
                 />
               </div>
             )}
-            <label className="flex items-center justify-center px-6 py-4 border-2 border-dashed border-indigo-300 rounded-md cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition">
+            <label className="flex flex-col items-center justify-center px-6 py-4 border border-dashed border-gray-300 rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+              <ProfilePhotoPlaceholder className="mb-3 h-24 w-24" />
               <input
                 type="file"
                 name="profileImage"
@@ -282,9 +346,10 @@ const AddExecutiveCouncil = () => {
                 className="hidden"
               />
               <span className="text-indigo-600 font-semibold">
-                📁 Upload Profile Image
+                Upload Profile Image <span className="text-red-500">*</span>
               </span>
             </label>
+            {fieldErrors.profileImage && <p className="text-red-500 text-sm mt-2">{fieldErrors.profileImage}</p>}
           </div>
 
           <button

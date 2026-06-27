@@ -39,6 +39,77 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // Max file size 5MB
 });
 
+const phonePattern = /^\+(\d{1,4})(\d{4,14})$/;
+
+const getCountrySpecificPhoneValidationError = (countryCode, nationalDigits, label) => {
+  switch (countryCode) {
+    case "880":
+      return /^1[3-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Bangladesh number`;
+    case "91":
+      return /^[6-9]\d{9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Indian number`;
+    case "92":
+      return /^3[0-9]\d{9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Pakistan number`;
+    case "1":
+      return /^\d{10}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid US/Canada number`;
+    case "44":
+      return /^(7\d{9}|1\d{10}|2\d{8,9}|3\d{8,9}|4\d{8,9}|5\d{8,9}|6\d{8,9}|8\d{8,9}|9\d{8,9})$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid UK number`;
+    case "60":
+      return /^1\d{8,9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Malaysian number`;
+    case "971":
+      return /^[5-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid UAE number`;
+    case "966":
+      return /^[5-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Saudi Arabia number`;
+    default:
+      return nationalDigits.length >= 6 && nationalDigits.length <= 14
+        ? ""
+        : `${label} must be a valid international number`;
+  }
+};
+
+const getPhoneValidationError = (value, label = "Mobile number", required = false) => {
+  const phone = String(value || "").trim().replace(/\s+/g, "");
+  if (!phone) return required ? `${label} is required` : "";
+
+  const match = phone.match(phonePattern);
+  if (!match) {
+    return `${label} must begin with a country code and contain only numbers`;
+  }
+
+  const [, countryCode, nationalDigits] = match;
+  return getCountrySpecificPhoneValidationError(countryCode, nationalDigits, label);
+};
+
+const validatePhoneFields = (body, options = {}) => {
+  const errors = {};
+  const mobileError = getPhoneValidationError(
+    body.mobile,
+    "Mobile number",
+    options.mobileRequired
+  );
+  if (mobileError) errors.mobile = mobileError;
+
+  const whatsappError = getPhoneValidationError(body.whatsapp, "WhatsApp number");
+  if (whatsappError) errors.whatsapp = whatsappError;
+
+  return errors;
+};
+
 
 function createEmailVerificationToken(user) {
   const rawToken = crypto.randomBytes(32).toString("hex");
@@ -194,9 +265,26 @@ router.post("/user", upload.single("profileImage"), async (req, res) => {
     // Generate hashed password
     const hashpassword = await bcrypt.hash(req.body.password, saltRounds);
 
-    // Validate required fields
-    if (!req.body.fullName || !req.body.email || !req.body.password) {
-      return res.status(400).json({ msg: "Name, email, and password are required" });
+    const requiredErrors = {};
+    if (!req.body.fullName || !String(req.body.fullName).trim()) {
+      requiredErrors.fullName = "Full name is required";
+    }
+    if (!req.body.email || !String(req.body.email).trim()) {
+      requiredErrors.email = "Email is required";
+    }
+    if (!req.body.password) {
+      requiredErrors.password = "Password is required";
+    } else if (String(req.body.password).length < 8) {
+      requiredErrors.password = "Password must be at least 8 characters";
+    }
+
+    if (Object.keys(requiredErrors).length > 0) {
+      return res.status(400).json({ errors: requiredErrors });
+    }
+
+    const phoneErrors = validatePhoneFields(req.body, { mobileRequired: true });
+    if (Object.keys(phoneErrors).length > 0) {
+      return res.status(400).json({ errors: phoneErrors });
     }
 
     // Check if email already exists
@@ -241,6 +329,9 @@ router.post("/user", upload.single("profileImage"), async (req, res) => {
       uniqueId,
       name: req.body.fullName,
       email: req.body.email,
+      mobile: req.body.mobile,
+      permanentAddress: req.body.permanentAddress,
+      currentAddress: req.body.currentAddress,
       linkedinId: req.body.linkedinId,
       facebook: req.body.facebook,
       whatsapp: req.body.whatsapp,
@@ -297,6 +388,13 @@ router.put("/editProfile/:uniqueId", upload.single("profileImage"), async (req, 
     // Update other fields
     user.name = req.body.fullName || user.name;
     user.email = req.body.email || user.email;
+    const phoneErrors = validatePhoneFields(req.body);
+    if (Object.keys(phoneErrors).length > 0) {
+      return res.status(400).json({ errors: phoneErrors });
+    }
+    user.mobile = req.body.mobile || user.mobile;
+    user.permanentAddress = req.body.permanentAddress || user.permanentAddress;
+    user.currentAddress = req.body.currentAddress || user.currentAddress;
     user.linkedinId = req.body.linkedinId || user.linkedinId;
     user.facebook = req.body.facebook || user.facebook;
     user.whatsapp = req.body.whatsapp || user.whatsapp;
@@ -345,109 +443,106 @@ router.put("/editProfile/:uniqueId", upload.single("profileImage"), async (req, 
 });
 router.post("/addalumni", upload.single("profileImage"), async (req, res) => {
   try {
-  
+    const {
+      fullName = "",
+      email = "",
+      mobile = "",
+      whatsapp = "",
+      linkedin = "",
+      designation = "",
+      currentEmployer = "",
+      facebook = "",
+    } = req.body;
 
-    // Generate hashed password
-  
+    const trimmedName = fullName.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Validate required fields
-    if (!req.body.fullName || !req.body.email ) {
-      return res.status(400).json({ msg: "Name, email, and password are required" });
+    const requiredErrors = {};
+    if (!trimmedName) requiredErrors.fullName = "Full name is required.";
+    if (!normalizedEmail) requiredErrors.email = "Email is required.";
+    if (!req.body.designation || !String(req.body.designation).trim()) {
+      requiredErrors.designation = "Designation is required.";
+    }
+    if (!req.body.mobile || !String(req.body.mobile).trim()) {
+      requiredErrors.mobile = "Mobile number is required.";
+    }
+    if (!req.file) requiredErrors.profileImage = "Profile image is required.";
+
+    if (Object.keys(requiredErrors).length > 0) {
+      return res.status(400).json({ errors: requiredErrors });
     }
 
-    // Generate a unique ID and check its uniqueness
+    const phoneErrors = validatePhoneFields(req.body, { mobileRequired: true });
+    if (Object.keys(phoneErrors).length > 0) {
+      return res.status(400).json({ errors: phoneErrors });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please provide a valid email address." });
+    }
+
+    const existingAlumni = await Alumni.findOne({ email: normalizedEmail });
+    if (existingAlumni) {
+      return res.status(409).json({ message: "An alumni with this email already exists." });
+    }
+
     let uniqueId;
     let isUnique = false;
-
     while (!isUnique) {
-      uniqueId = Math.floor(10000 + Math.random() * 90000); // Generate a 5-digit number
-      const existingUser = await User.findOne({ uniqueId }); // Check uniqueness
-      if (!existingUser) {
-        isUnique = true;
-      }
+      uniqueId = Math.floor(10000 + Math.random() * 90000);
+      const existingAlumniId = await Alumni.findOne({ uniqueId });
+      if (!existingAlumniId) isUnique = true;
     }
 
-    // Handle profile image upload
-    const file = req.file; // Uploaded file from `upload.single()`
-
+    let imageUrl = "";
+    const file = req.file;
     if (file) {
-      const uploadDir = path.join(__dirname, "uploads"); // Define the correct target folder path
-
+      const uploadDir = path.join(__dirname, "uploads");
       if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true }); // Create the directory if it doesn't exist
+        fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      const fileExtension = path.extname(file.originalname).toLowerCase(); // Get original file extension
-      const validExtensions = [".jpg", ".jpeg", ".png"]; // Allowed image formats
-
-      // Check if the file extension is valid
-
+      const fileExtension = path.extname(file.originalname).toLowerCase();
+      const validExtensions = [".jpg", ".jpeg", ".png"];
       if (!validExtensions.includes(fileExtension)) {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         return res.status(400).json({
-          msg: "Invalid file format. Only .jpg, .jpeg, .png allowed."
-       
+          message: "Invalid file format. Only .jpg, .jpeg, and .png are allowed.",
         });
       }
 
-      // Rename the file with a timestamp and ensure it has a .jpg extension
-      const fileName = `${Date.now()}.jpg`; // Save file as .jpg format
-      const filePath = path.join(uploadDir, fileName); // Correct target file path
-
-      // Move the file to the server's directory with the new name
+      const fileName = `${Date.now()}${fileExtension}`;
+      const filePath = path.join(uploadDir, fileName);
       fs.renameSync(file.path, filePath);
-
-      // Generate image URL for frontend
-      const imageUrl = `http://localhost:5000/uploads/${fileName}`; // Update with your hosting URL
-
-      // Save user with profile image URL
-      const newUser = new Alumni({
-        uniqueId, // Unique ID
-        name: req.body.fullName,
-        email: req.body.email,
-        mobile: req.body.mobile,
-        facebook: req.body.facebook,
-        whatsapp: req.body.whatsapp,
-        linkedin: req.body.linkedin,
-        currentEmployer: req.body.currentEmployer,
-        designation: req.body.designation,
-     
-        image: imageUrl, // Save image URL
-      });
-
-      await newUser.save();
-
-      return res.status(200).json({
-        message: "Signup was successful!",
-        userId: uniqueId,
-        imageUrl: imageUrl, // Return image URL
-      });
-    } else {
-      // If no file is uploaded, create alumni without image
-      const newAlumni = new Alumni({
-        uniqueId, // Unique ID
-        name: req.body.fullName,
-        email: req.body.email,
-        mobile: req.body.mobile,
-        facebook: req.body.facebook,
-        whatsapp: req.body.whatsapp,
-        linkedin: req.body.linkedin,
-        currentEmployer: req.body.currentEmployer,
-        designation: req.body.designation,
-        image: null, // No image uploaded
-      });
-
-      await newAlumni.save();
-
-      return res.status(200).json({
-        message: "Alumni signup was successful without a profile image",
-        userId: uniqueId,
-        imageUrl: null, // No image URL
-      });
+      imageUrl = `http://localhost:5000/uploads/${fileName}`;
     }
 
+    const newAlumni = new Alumni({
+      uniqueId,
+      name: trimmedName,
+      email: normalizedEmail,
+      mobile: mobile.trim(),
+      whatsapp: whatsapp.trim(),
+      linkedin: linkedin.trim(),
+      designation: designation.trim(),
+      currentEmployer: currentEmployer.trim(),
+      facebook: facebook.trim(),
+      image: imageUrl,
+    });
+
+    await newAlumni.save();
+
+    return res.status(201).json({
+      message: "Alumni added successfully",
+      alumni: newAlumni,
+      userId: uniqueId,
+      imageUrl,
+    });
   } catch (error) {
-    res.status(400).json({
-      message: "Error in signing up",
+    const status = error?.name === "ValidationError" ? 400 : 500;
+    res.status(status).json({
+      message: "Error adding alumni",
       error: error.message,
     });
   }
@@ -706,12 +801,10 @@ router.get("/Alluserprofile", async (req, res) => {
 router.get("/allalumni", async (req, res) => {
   try {
     const user = await Alumni.find({});
-    if (user && user.length > 0) {
-      res.send(user);
-    }
+    res.status(200).send(user);
   } catch (error) {
-    res.status(200).json({
-      error: "Wrong Username and password",
+    res.status(500).json({
+      error: "Unable to fetch alumni",
     });
   }
 });

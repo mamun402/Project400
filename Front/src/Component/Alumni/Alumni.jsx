@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FaFacebook, FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { phoneToWhatsAppPath } from "../Common/PhoneInput";
 
 const Alumni = () => {
   const [alumniData, setAlumniData] = useState([]);
@@ -90,7 +91,7 @@ const Alumni = () => {
                     <FaLinkedin className="text-blue-500 text-xl" />
                   </a>
                   <a
-                    href={`https://wa.me/${alumni.whatsapp}`} // Format for WhatsApp link
+                    href={`https://wa.me/${phoneToWhatsAppPath(alumni.whatsapp)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

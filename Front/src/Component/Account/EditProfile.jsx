@@ -1,6 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PhoneInput, { getPhoneError } from "../Common/PhoneInput";
+import ProfilePhotoPlaceholder from "../Common/ProfilePhotoPlaceholder";
 
 const EditProfile = () => {
   const { id } = useParams();
@@ -91,14 +93,12 @@ const EditProfile = () => {
       return;
     }
 
-    // Validate mobile number: 11 digits starting with 017, 018, 019, 016, 013, or 014
     const errors = {};
-    if (formData.mobile && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.mobile)) {
-      errors.mobile = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
-    }
-    if (formData.whatsapp && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.whatsapp)) {
-      errors.whatsapp = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
-    }
+    const mobileError = getPhoneError(formData.mobile, "Mobile number");
+    if (mobileError) errors.mobile = mobileError;
+
+    const whatsappError = getPhoneError(formData.whatsapp, "WhatsApp number");
+    if (whatsappError) errors.whatsapp = whatsappError;
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -133,6 +133,10 @@ const EditProfile = () => {
         console.warn("Unexpected response:", response.data);
       }
     } catch (error) {
+      if (error.response?.data?.errors) {
+        setFieldErrors(error.response.data.errors);
+      }
+      setVisibleR(true);
       setTimeout(() => setVisibleR(false), 2000);
       console.error("Update error:", error.response?.data || error.message);
     }
@@ -179,15 +183,13 @@ const EditProfile = () => {
             required
             className="w-full px-3 py-2 border rounded-lg"
           />
-          <input
-            type="text"
+          <PhoneInput
+            label="Mobile Number"
             name="mobile"
-            placeholder="Mobile"
             value={formData.mobile}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-lg"
+            error={fieldErrors.mobile}
           />
-          {fieldErrors.mobile && <p className="text-red-500 text-sm">{fieldErrors.mobile}</p>}
           {/* Password Fields */}
           <input
             type="password"
@@ -234,15 +236,13 @@ const EditProfile = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
           />
-          <input
-            type="text"
+          <PhoneInput
+            label="WhatsApp Number"
             name="whatsapp"
-            placeholder="WhatsApp Number"
             value={formData.whatsapp}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
+            error={fieldErrors.whatsapp}
           />
-          {fieldErrors.whatsapp && <p className="text-red-500 text-sm mt-1">{fieldErrors.whatsapp}</p>}
           <input
             type="text"
             name="batch"
@@ -281,8 +281,9 @@ const EditProfile = () => {
             ) : (
               <label
                 htmlFor="profile-image-upload"
-                className="cursor-pointer flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-green-400 p-4 text-center"
+                className="cursor-pointer flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-center hover:bg-gray-100"
               >
+                <ProfilePhotoPlaceholder className="mb-3 h-20 w-20" />
                 <span className="text-gray-600">Upload New Image</span>
               </label>
             )}

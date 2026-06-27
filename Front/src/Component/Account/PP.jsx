@@ -9,6 +9,7 @@ import {
 import { Link } from "react-router";
 import { userContext } from "../../App";
 import ChangePassword from "./ChangePassword";
+import { phoneToWhatsAppPath } from "../Common/PhoneInput";
 const PP = ({ user }) => {
   const [login, setLogin, permissionsState, setPermissionsState] =
     useContext(userContext);
@@ -119,7 +120,7 @@ const PP = ({ user }) => {
               <div className="mt-4 text-gray-700 flex items-center gap-4">
                 <FaWhatsapp className="text-primary" />
                 <a
-                  href={user.whatsapp}
+                  href={`https://wa.me/${phoneToWhatsAppPath(user.whatsapp)}`}
                   className="text-blue-500 font-medium hover:underline"
                 >
                   View whatsapp

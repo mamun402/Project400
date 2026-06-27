@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import Datepicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaFacebookF, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
+import { phoneToWhatsAppPath } from "../Common/PhoneInput";
 
 const ExecutiveCommittee = () => {
   const [members, setMembers] = useState([]);
@@ -246,7 +247,7 @@ const ExecutiveCommittee = () => {
                   )}
                   {member.whatsapp && (
                     <a
-                      href={`https://wa.me/${member.whatsapp}`}
+                      href={`https://wa.me/${phoneToWhatsAppPath(member.whatsapp)}`}
                       target="_blank"
                       rel="noreferrer"
                     >

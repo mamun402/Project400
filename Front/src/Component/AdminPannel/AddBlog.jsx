@@ -33,7 +33,7 @@ const AddBlog = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (!info.blogTitle || !info.authorName || !info.content) {
+    if (!info.blogTitle || !info.authorName || !info.content || !file) {
       alert("Please fill in all fields.");
       setLoading(false);
       return;
@@ -88,7 +88,7 @@ const AddBlog = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Blog Title
+              Blog Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -101,7 +101,7 @@ const AddBlog = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Author Name
+              Author Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -114,7 +114,7 @@ const AddBlog = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Content
+              Content <span className="text-red-500">*</span>
             </label>
             <textarea
               name="content"
@@ -152,7 +152,7 @@ const AddBlog = () => {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <span className="text-gray-600">Upload Blog Image</span>
+              <span className="text-gray-600">Upload Blog Image <span className="text-red-500">*</span></span>
             </label>
           </div>
           <button

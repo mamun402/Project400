@@ -2,43 +2,46 @@ const mongoose = require("mongoose");
 let uniqueValidator = require("mongoose-unique-validator");
 const AlumniScheema = mongoose.Schema({
   name: {
-    type: "string",
-    require: "true",
+    type: String,
+    required: true,
+    trim: true,
   },
-  uniqueId: { type: String, required: true, unique: true }, // Unique constraint
+  uniqueId: { type: Number, required: true, unique: true }, // Unique constraint
   email: {
-    type: "string",
-    require: "true",
-    unique: "true",
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
   },
   mobile: {
     type: String,
-    require: true,
+    default: "",
   },
 
   whatsapp: {
-    type: "string",
-    require: "true",
+    type: String,
+    default: "",
   },
   linkedin: {
-    type: "string",
-    require: "true",
+    type: String,
+    default: "",
   },
   designation: {
-    type: "string",
-    require: "true",
+    type: String,
+    default: "",
   },
   currentEmployer: {
-    type: "string",
-    require: "true",
+    type: String,
+    default: "",
   },
   facebook: {
-    type: "string",
-    require: "true",
+    type: String,
+    default: "",
   },
   image: {
     type: String, // Stores the filename of the uploaded image
-    required: false, // Optional field
+    default: "",
   },
  
 });

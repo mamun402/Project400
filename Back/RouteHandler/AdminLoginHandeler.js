@@ -63,6 +63,78 @@ const uploads = multer({
     cb(null, true);
   },
 });
+
+const phonePattern = /^\+(\d{1,4})(\d{4,14})$/;
+
+const getCountrySpecificPhoneValidationError = (countryCode, nationalDigits, label) => {
+  switch (countryCode) {
+    case "880":
+      return /^1[3-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Bangladesh number`;
+    case "91":
+      return /^[6-9]\d{9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Indian number`;
+    case "92":
+      return /^3[0-9]\d{9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Pakistan number`;
+    case "1":
+      return /^\d{10}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid US/Canada number`;
+    case "44":
+      return /^(7\d{9}|1\d{10}|2\d{8,9}|3\d{8,9}|4\d{8,9}|5\d{8,9}|6\d{8,9}|8\d{8,9}|9\d{8,9})$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid UK number`;
+    case "60":
+      return /^1\d{8,9}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Malaysian number`;
+    case "971":
+      return /^[5-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid UAE number`;
+    case "966":
+      return /^[5-9]\d{8}$/.test(nationalDigits)
+        ? ""
+        : `${label} must be a valid Saudi Arabia number`;
+    default:
+      return nationalDigits.length >= 6 && nationalDigits.length <= 14
+        ? ""
+        : `${label} must be a valid international number`;
+  }
+};
+
+const getPhoneValidationError = (value, label = "Mobile number", required = false) => {
+  const phone = String(value || "").trim().replace(/\s+/g, "");
+  if (!phone) return required ? `${label} is required` : "";
+
+  const match = phone.match(phonePattern);
+  if (!match) {
+    return `${label} must begin with a country code and contain only numbers`;
+  }
+
+  const [, countryCode, nationalDigits] = match;
+  return getCountrySpecificPhoneValidationError(countryCode, nationalDigits, label);
+};
+
+const validatePhoneFields = (body, options = {}) => {
+  const errors = {};
+  const mobileError = getPhoneValidationError(
+    body.mobile,
+    "Mobile number",
+    options.mobileRequired
+  );
+  if (mobileError) errors.mobile = mobileError;
+
+  const whatsappError = getPhoneValidationError(body.whatsapp, "WhatsApp number");
+  if (whatsappError) errors.whatsapp = whatsappError;
+
+  return errors;
+};
+
 // Function to generate a unique 6-digit book ID
 router.post("/signup", async (req, res) => {
   try {
@@ -122,6 +194,10 @@ router.post("/user", upload.single("profileImage"), async (req, res) => {
   
     if (!req.body.fullName || !req.body.email || !req.body.password) {
       return res.status(400).json({ msg: "Name, email, and password are required" });
+    }
+    const phoneErrors = validatePhoneFields(req.body, { mobileRequired: true });
+    if (Object.keys(phoneErrors).length > 0) {
+      return res.status(400).json({ errors: phoneErrors });
     }
     // Generate a unique ID and check its uniqueness
     let uniqueId;
@@ -1128,12 +1204,32 @@ router.delete("/deletePhotoGallery", async (req, res) => {
   }
 });
 router.post("/addnotice", uploads.single("file"), async (req, res) => {
-  const { noticeTitle, description,category } = req.body;
-  const file = req.file; // Uploaded file from `upload.single()`
+  const { noticeTitle, description, category } = req.body;
+  const file = req.file;
 
-  // Validate input fields
-  if (!noticeTitle || !description || !file) {
-    return res.status(400).json({ msg: "All fields are required" });
+  const validationErrors = {};
+  if (!noticeTitle || !String(noticeTitle).trim()) {
+    validationErrors.noticeTitle = "Notice title is required";
+  } else if (String(noticeTitle).trim().length < 3) {
+    validationErrors.noticeTitle = "Notice title must be at least 3 characters";
+  }
+
+  if (!description || !String(description).trim()) {
+    validationErrors.description = "Description is required";
+  } else if (String(description).trim().length < 10) {
+    validationErrors.description = "Description must be at least 10 characters";
+  }
+
+  if (!category || !String(category).trim()) {
+    validationErrors.category = "Category is required";
+  }
+
+  if (!file) {
+    validationErrors.file = "Notice image is required";
+  }
+
+  if (Object.keys(validationErrors).length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
   try {
@@ -2005,6 +2101,10 @@ router.post("/exicutiveCounsil", upload.single("profileImage"), async (req, res)
     // Validate required fields
     if (!req.body.fullName || !req.body.email || !req.body.password) {
       return res.status(400).json({ msg: "Name, email, and password are required" });
+    }
+    const phoneErrors = validatePhoneFields(req.body, { mobileRequired: true });
+    if (Object.keys(phoneErrors).length > 0) {
+      return res.status(400).json({ errors: phoneErrors });
     }
     // Generate a unique ID and check its uniqueness
     let uniqueId;

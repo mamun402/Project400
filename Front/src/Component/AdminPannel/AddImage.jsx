@@ -84,7 +84,7 @@ const AddGalleryImage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Title
+              Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -97,7 +97,7 @@ const AddGalleryImage = () => {
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -135,7 +135,7 @@ const AddGalleryImage = () => {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <span className="text-gray-600">Upload Image</span>
+              <span className="text-gray-600">Upload Image <span className="text-red-500">*</span></span>
             </label>
           </div>
           <button

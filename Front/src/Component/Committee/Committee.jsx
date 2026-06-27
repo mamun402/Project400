@@ -5,6 +5,7 @@ import {
   FaLinkedin,
   FaWhatsapp,
 } from "react-icons/fa";
+import { phoneToWhatsAppPath } from "../Common/PhoneInput";
 const Committee = () => {
   const [members, setMembers] = useState([]);
   const [openEdit, setOpenEdit] = useState(false);
@@ -158,7 +159,7 @@ const Committee = () => {
                   )}
                   {member.whatsapp && (
                     <a
-                      href={`https://wa.me/${member.whatsapp}`}
+                      href={`https://wa.me/${phoneToWhatsAppPath(member.whatsapp)}`}
                       target="_blank"
                       rel="noreferrer"
                     >

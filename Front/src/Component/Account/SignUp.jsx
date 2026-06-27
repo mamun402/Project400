@@ -1,6 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PhoneInput, { getPhoneError } from "../Common/PhoneInput";
+import ProfilePhotoPlaceholder from "../Common/ProfilePhotoPlaceholder";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -44,33 +46,43 @@ const Signup = () => {
   const validateFields = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const fullName = formData.fullName.trim();
+    const email = formData.email.trim();
+    const password = formData.password;
+    const confirmPassword = formData.confirmPassword;
 
-    // Full Name validation: letters and spaces only, at least 2 characters
-    if (!/^[A-Za-z\s]{2,}$/.test(formData.fullName.trim())) {
-      errors.fullName = "Fill up the Name correctly";
+    if (!fullName) {
+      errors.fullName = "Full name is required";
+    } else if (!/^[A-Za-z][A-Za-z .'-]{1,}$/.test(fullName)) {
+      errors.fullName = "Enter a valid full name";
     }
 
-    // Email basic check
-    if (!formData.email) {
+    if (!email) {
       errors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email.trim())) {
+    } else if (!emailRegex.test(email)) {
       errors.email = "Enter a valid email address";
     }
 
-    // Password match
-    if (formData.password !== formData.confirmPassword) errors.password = "Passwords do not match";
-
-    // Mobile number validation: 11 digits starting with 017, 018, 019, 016, 013, or 014
-    if (formData.mobile && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.mobile)) {
-      errors.mobile = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
+    if (!password) {
+      errors.password = "Password is required";
+    } else if (password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)) {
+      errors.password = "Password must contain uppercase, lowercase, and a number";
     }
 
-    // Whatsapp number validation: 11 digits starting with 017, 018, 019, 016, 013, or 014
-    if (formData.whatsapp && !/^(017|018|019|016|013|014)\d{8}$/.test(formData.whatsapp)) {
-      errors.whatsapp = "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (confirmPassword !== password) {
+      errors.confirmPassword = "Passwords do not match";
     }
 
-    // Profile Image check
+    const mobileError = getPhoneError(formData.mobile, "Mobile number", true);
+    if (mobileError) errors.mobile = mobileError;
+
+    const whatsappError = getPhoneError(formData.whatsapp, "WhatsApp number");
+    if (whatsappError) errors.whatsapp = whatsappError;
+
     if (!formData.profileImage) errors.profileImage = "Upload photo to signup";
 
     return errors;
@@ -193,21 +205,14 @@ const Signup = () => {
             {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
           </div>
 
-          {/* Mobile */}
-          <div>
-            <label className="block mb-1 text-gray-600">
-              Mobile Number
-            </label>
-            <input
-              type="text"
-              name="mobile"
-              placeholder="Mobile Number"
-              value={formData.mobile}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
-            />
-            {fieldErrors.mobile && <p className="text-red-500 text-sm mt-1">{fieldErrors.mobile}</p>}
-          </div>
+          <PhoneInput
+            label="Mobile Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+            required
+            error={fieldErrors.mobile}
+          />
 
           {/* Password */}
           <div>
@@ -240,7 +245,9 @@ const Signup = () => {
               required
               className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
             />
-            {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
+            {(fieldErrors.confirmPassword || passwordError) && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.confirmPassword || passwordError}</p>
+            )}
           </div>
 
           {/* Social Links */}
@@ -264,15 +271,13 @@ const Signup = () => {
           />
           {fieldErrors.facebook && <p className="text-red-500 text-sm mt-1">{fieldErrors.facebook}</p>}
 
-          <input
-            type="text"
+          <PhoneInput
+            label="WhatsApp Number"
             name="whatsapp"
-            placeholder="Whatsapp Number"
             value={formData.whatsapp}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
+            error={fieldErrors.whatsapp}
           />
-          {fieldErrors.whatsapp && <p className="text-red-500 text-sm mt-1">{fieldErrors.whatsapp}</p>}
 
           {/* Image Upload / Preview */}
           {imagePreview ? (
@@ -285,17 +290,8 @@ const Signup = () => {
               {fieldErrors.profileImage && <p className="text-red-500 text-sm mt-1">{fieldErrors.profileImage}</p>}
             </div>
           ) : (
-            <label className="cursor-pointer flex w-full max-w-lg flex-col items-center justify-center rounded-xl border-2 border-dashed border-green-400 bg-white p-6 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-green-800"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
+            <label className="cursor-pointer flex w-full max-w-lg flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center hover:bg-gray-100">
+              <ProfilePhotoPlaceholder className="mb-4 h-24 w-24" />
               <input type="file" name="profileImage" accept="image/*" onChange={handleChange} className="hidden" />
               <span className="text-gray-600">Upload Your Image <span className="text-red-500">*</span></span>
               {fieldErrors.profileImage && <p className="text-red-500 text-sm mt-1">{fieldErrors.profileImage}</p>}

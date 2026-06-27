@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import PhoneInput, { getPhoneError } from "../Common/PhoneInput";
 
 const AddAlumni = () => {
   const [formData, setFormData] = useState({
@@ -18,19 +19,45 @@ const AddAlumni = () => {
   const [submissionError, setSubmissionError] = useState("");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const revokePreviewImage = (imageUrl) => {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
     if (name === "profileImage" && files && files.length > 0) {
       const file = files[0];
+      const validImageTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+      if (!validImageTypes.includes(file.type)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          profileImage: "Only JPG, JPEG, and PNG images are allowed",
+        }));
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          profileImage: "Image size must be 5MB or less",
+        }));
+        return;
+      }
 
       setFormData((prev) => ({
         ...prev,
         profileImage: file,
       }));
 
-      setPreviewImage(URL.createObjectURL(file));
+      setPreviewImage((currentPreview) => {
+        revokePreviewImage(currentPreview);
+        return URL.createObjectURL(file);
+      });
 
       // clear image error
       if (fieldErrors.profileImage) {
@@ -52,23 +79,44 @@ const AddAlumni = () => {
 
   const validateFields = () => {
     const errors = {};
-    const bdMobileRegex = /^(017|018|019|016|013|014)\d{8}$/;
+    const urlRegex = /^https?:\/\/\S+\.\S+$/i;
+    const fullName = formData.fullName.trim();
+    const email = formData.email.trim();
 
-    // Required fields
-    if (!formData.fullName.trim()) errors.fullName = "Full name is required";
-    if (!formData.email.trim()) errors.email = "Email is required";
-    if (!formData.profileImage) errors.profileImage = "Profile image is required";
-
-    // Mobile validation (required)
-    if (formData.mobile && !bdMobileRegex.test(formData.mobile)) {
-      errors.mobile =
-        "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
+    if (!fullName) {
+      errors.fullName = "Full name is required";
+    } else if (!/^[A-Za-z][A-Za-z .'-]{1,}$/.test(fullName)) {
+      errors.fullName = "Enter a valid full name";
     }
 
-    // WhatsApp validation (optional)
-    if (formData.whatsapp && !bdMobileRegex.test(formData.whatsapp)) {
-      errors.whatsapp =
-        "Enter a valid 11-digit mobile number starting with 017, 018, 019, 016, 013, or 014";
+    if (!email) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Enter a valid email address";
+    }
+
+    if (!formData.designation.trim()) {
+      errors.designation = "Designation is required";
+    }
+
+    if (!formData.mobile.trim()) {
+      errors.mobile = "Mobile number is required";
+    } else {
+      const mobileError = getPhoneError(formData.mobile, "Mobile number", true);
+      if (mobileError) errors.mobile = mobileError;
+    }
+
+    const whatsappError = getPhoneError(formData.whatsapp, "WhatsApp number");
+    if (whatsappError) errors.whatsapp = whatsappError;
+
+    if (!formData.profileImage) errors.profileImage = "Profile image is required";
+
+    if (formData.linkedin && !urlRegex.test(formData.linkedin.trim())) {
+      errors.linkedin = "Enter a valid LinkedIn URL starting with http:// or https://";
+    }
+
+    if (formData.facebook && !urlRegex.test(formData.facebook.trim())) {
+      errors.facebook = "Enter a valid Facebook URL starting with http:// or https://";
     }
 
     return errors;
@@ -83,15 +131,19 @@ const AddAlumni = () => {
       return;
     }
 
+    setIsSubmitting(true);
+    setSubmissionError("");
+    setSubmissionSuccess(false);
+
     const formDataToSend = new FormData();
-    formDataToSend.append("fullName", formData.fullName);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("mobile", formData.mobile);
-    formDataToSend.append("whatsapp", formData.whatsapp);
-    formDataToSend.append("linkedin", formData.linkedin);
-    formDataToSend.append("designation", formData.designation);
-    formDataToSend.append("currentEmployer", formData.currentEmployer);
-    formDataToSend.append("facebook", formData.facebook);
+    formDataToSend.append("fullName", formData.fullName.trim());
+    formDataToSend.append("email", formData.email.trim());
+    formDataToSend.append("mobile", formData.mobile.trim());
+    formDataToSend.append("whatsapp", formData.whatsapp.trim());
+    formDataToSend.append("linkedin", formData.linkedin.trim());
+    formDataToSend.append("designation", formData.designation.trim());
+    formDataToSend.append("currentEmployer", formData.currentEmployer.trim());
+    formDataToSend.append("facebook", formData.facebook.trim());
     formDataToSend.append("profileImage", formData.profileImage);
 
     axios
@@ -99,7 +151,7 @@ const AddAlumni = () => {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((res) => {
-        if (res.data.message === "Signup was successful!") {
+        if (res.status === 201 || res.data.message === "Alumni added successfully") {
           setSubmissionSuccess(true);
           setSubmissionError("");
 
@@ -115,17 +167,31 @@ const AddAlumni = () => {
             facebook: "",
             profileImage: null,
           });
-          setPreviewImage(null);
+          setPreviewImage((currentPreview) => {
+            revokePreviewImage(currentPreview);
+            return null;
+          });
           setFieldErrors({});
+          setFileInputKey(Date.now());
         } else {
           setSubmissionSuccess(false);
-          setSubmissionError("Failed to add alumni. Please try again.");
+          setSubmissionError(res.data?.message || "Failed to add alumni. Please try again.");
         }
       })
       .catch((error) => {
         setSubmissionSuccess(false);
-        setSubmissionError("There was an error! Please try again.");
+        if (error.response?.data?.errors) {
+          setFieldErrors(error.response.data.errors);
+        }
+        setSubmissionError(
+          error.response?.data?.message ||
+            error.response?.data?.error ||
+            "There was an error! Please try again."
+        );
         console.error("There was an error:", error);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   };
 
@@ -146,7 +212,7 @@ const AddAlumni = () => {
   // avoid memory leak from object URL
   useEffect(() => {
     return () => {
-      if (previewImage) URL.revokeObjectURL(previewImage);
+      revokePreviewImage(previewImage);
     };
   }, [previewImage]);
 
@@ -178,7 +244,7 @@ const AddAlumni = () => {
           {/* Full Name */}
           <div>
             <label className="block mb-1 text-gray-600">
-              Full Name
+              Full Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -197,7 +263,7 @@ const AddAlumni = () => {
           {/* Email */}
           <div>
             <label className="block mb-1 text-gray-600">
-              Email Address
+              Email Address <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -215,7 +281,9 @@ const AddAlumni = () => {
 
           {/* Designation (optional) */}
           <div>
-            <label className="block mb-1 text-gray-600">Designation</label>
+            <label className="block mb-1 text-gray-600">
+              Designation <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               name="designation"
@@ -239,39 +307,22 @@ const AddAlumni = () => {
             />
           </div>
 
-          {/* Mobile */}
-          <div>
-            <label className="block mb-1 text-gray-600">
-              Mobile Number
-            </label>
-            <input
-              type="text"
-              name="mobile"
-              placeholder="Mobile Number"
-              value={formData.mobile}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
-            />
-            {fieldErrors.mobile && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.mobile}</p>
-            )}
-          </div>
+          <PhoneInput
+            label="Mobile Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+            required
+            error={fieldErrors.mobile}
+          />
 
-          {/* WhatsApp */}
-          <div>
-            <label className="block mb-1 text-gray-600">WhatsApp Number</label>
-            <input
-              type="text"
-              name="whatsapp"
-              placeholder="WhatsApp Number"
-              value={formData.whatsapp}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
-            />
-            {fieldErrors.whatsapp && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.whatsapp}</p>
-            )}
-          </div>
+          <PhoneInput
+            label="WhatsApp Number"
+            name="whatsapp"
+            value={formData.whatsapp}
+            onChange={handleChange}
+            error={fieldErrors.whatsapp}
+          />
 
           {/* LinkedIn */}
           <div>
@@ -284,6 +335,9 @@ const AddAlumni = () => {
               onChange={handleChange}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
             />
+            {fieldErrors.linkedin && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.linkedin}</p>
+            )}
           </div>
 
           {/* Facebook */}
@@ -297,6 +351,9 @@ const AddAlumni = () => {
               onChange={handleChange}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring focus:ring-purple-500"
             />
+            {fieldErrors.facebook && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.facebook}</p>
+            )}
           </div>
 
           {/* Image Upload / Preview (REQUIRED) */}
@@ -310,6 +367,7 @@ const AddAlumni = () => {
               <label className="cursor-pointer text-sm text-indigo-600 hover:underline">
                 Change image
                 <input
+                  key={`change-${fileInputKey}`}
                   type="file"
                   name="profileImage"
                   accept="image/*"
@@ -324,23 +382,11 @@ const AddAlumni = () => {
               )}
             </div>
           ) : (
-            <label className="cursor-pointer flex w-full max-w-lg flex-col items-center justify-center rounded-xl border-2 border-dashed border-green-400 bg-white p-6 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-green-800"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
+            <label className="cursor-pointer flex w-full max-w-lg flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center hover:bg-gray-100">
+              <ProfilePhotoPlaceholder className="mb-4 h-24 w-24" />
 
               <input
+                key={`upload-${fileInputKey}`}
                 type="file"
                 name="profileImage"
                 accept="image/*"
@@ -349,7 +395,7 @@ const AddAlumni = () => {
               />
 
               <span className="text-gray-600">
-                Upload Your Image
+                Upload Your Image <span className="text-red-500">*</span>
               </span>
 
               {fieldErrors.profileImage && (
@@ -362,9 +408,10 @@ const AddAlumni = () => {
 
           <button
             type="submit"
-            className="w-full py-2 text-white font-bold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-indigo-600 hover:to-purple-600"
+            disabled={isSubmitting}
+            className="w-full py-2 text-white font-bold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-indigo-600 hover:to-purple-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Add Alumni
+            {isSubmitting ? "Adding..." : "Add Alumni"}
           </button>
         </form>
       </div>
