@@ -117,7 +117,7 @@ const ApproveUser = () => {
           ) : (
             <tr>
               <td colSpan="6" className="text-center p-4 text-gray-500">
-                No users found.
+                There are no pending users to approve.
               </td>
             </tr>
           )}
