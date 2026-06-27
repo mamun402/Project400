@@ -798,6 +798,132 @@ router.get("/Alluserprofile", async (req, res) => {
   }
 });
 
+router.put("/editalumni/:id", upload.single("profileImage"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { uniqueId: Number(id) };
+
+    const alumni = await Alumni.findOne(filter);
+    if (!alumni) {
+      return res.status(404).json({ message: "Alumni not found." });
+    }
+
+    const trimmedName = String(req.body.fullName || "").trim();
+    const normalizedEmail = String(req.body.email || "").trim().toLowerCase();
+
+    const requiredErrors = {};
+    if (!trimmedName) requiredErrors.fullName = "Full name is required.";
+    if (!normalizedEmail) requiredErrors.email = "Email is required.";
+    if (!req.body.designation || !String(req.body.designation).trim()) {
+      requiredErrors.designation = "Designation is required.";
+    }
+    if (!req.body.mobile || !String(req.body.mobile).trim()) {
+      requiredErrors.mobile = "Mobile number is required.";
+    }
+
+    if (Object.keys(requiredErrors).length > 0) {
+      return res.status(400).json({ errors: requiredErrors });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please provide a valid email address." });
+    }
+
+    const existingAlumni = await Alumni.findOne({
+      email: normalizedEmail,
+      _id: { $ne: alumni._id },
+    });
+    if (existingAlumni) {
+      return res.status(409).json({ message: "An alumni with this email already exists." });
+    }
+
+    let imageUrl = alumni.image || "";
+    if (req.file) {
+      const uploadDir = path.join(__dirname, "uploads");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const fileExtension = path.extname(req.file.originalname).toLowerCase();
+      const validExtensions = [".jpg", ".jpeg", ".png"];
+      if (!validExtensions.includes(fileExtension)) {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return res.status(400).json({
+          message: "Invalid file format. Only .jpg, .jpeg, and .png are allowed.",
+        });
+      }
+
+      const fileName = `${Date.now()}${fileExtension}`;
+      const filePath = path.join(uploadDir, fileName);
+      fs.renameSync(req.file.path, filePath);
+      imageUrl = `http://localhost:5000/uploads/${fileName}`;
+
+      if (alumni.image) {
+        const oldImagePath = path.join(uploadDir, path.basename(alumni.image));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    }
+
+    alumni.name = trimmedName;
+    alumni.email = normalizedEmail;
+    alumni.mobile = String(req.body.mobile || "").trim();
+    alumni.whatsapp = String(req.body.whatsapp || "").trim();
+    alumni.linkedin = String(req.body.linkedin || "").trim();
+    alumni.designation = String(req.body.designation || "").trim();
+    alumni.currentEmployer = String(req.body.currentEmployer || "").trim();
+    alumni.facebook = String(req.body.facebook || "").trim();
+    alumni.image = imageUrl;
+
+    await alumni.save();
+
+    return res.status(200).json({
+      message: "Alumni updated successfully",
+      alumni,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating alumni",
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/deletealumni/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { uniqueId: Number(id) };
+
+    const alumni = await Alumni.findOne(filter);
+    if (!alumni) {
+      return res.status(404).json({ message: "Alumni not found." });
+    }
+
+    if (alumni.image) {
+      const uploadDir = path.join(__dirname, "uploads");
+      const oldImagePath = path.join(uploadDir, path.basename(alumni.image));
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+    }
+
+    await Alumni.deleteOne(filter);
+
+    return res.status(200).json({ message: "Alumni deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error deleting alumni",
+      error: error.message,
+    });
+  }
+});
+
 router.get("/allalumni", async (req, res) => {
   try {
     const user = await Alumni.find({});

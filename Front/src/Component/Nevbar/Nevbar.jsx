@@ -6,7 +6,7 @@ import logo from "../Image/Logo.jpg";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const [login, setLogin, permissionsState, setPermissionsState] =
+  const { login, setLogin, permissionsState, setPermissionsState } =
     useContext(userContext);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 

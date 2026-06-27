@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import ProfilePhotoPlaceholder from "../Common/ProfilePhotoPlaceholder";
 import PhoneInput, { getPhoneError } from "../Common/PhoneInput";
 
 const AddAlumni = () => {

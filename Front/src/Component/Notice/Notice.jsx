@@ -1,23 +1,39 @@
 import React, { useEffect, useState } from "react";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const getNoticeTimestamp = (notice) => {
-  const raw = notice?.createdAt || notice?.date;
-  const parsed = raw ? new Date(raw) : null;
-  if (!parsed || Number.isNaN(parsed.getTime())) {
-    return 0;
+  const candidates = [notice?.createdAt, notice?.updatedAt, notice?.date, notice?.displayDate];
+
+  for (const raw of candidates) {
+    if (!raw) continue;
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.getTime();
+    }
   }
-  return parsed.getTime();
+
+  if (notice?._id && typeof notice._id === "string" && notice._id.length === 24) {
+    try {
+      const objectIdTimestamp = parseInt(notice._id.substring(0, 8), 16) * 1000;
+      const parsed = new Date(objectIdTimestamp);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.getTime();
+      }
+    } catch (error) {
+      console.error("Could not derive notice timestamp from ObjectId:", error);
+    }
+  }
+
+  return 0;
 };
 
 const formatNoticeDate = (notice) => {
-  const raw = notice?.createdAt || notice?.date;
-  const parsed = raw ? new Date(raw) : null;
-  if (!parsed || Number.isNaN(parsed.getTime())) {
+  const timestamp = getNoticeTimestamp(notice);
+  if (!timestamp) {
     return "";
   }
 
-  return `${parsed.toLocaleString("en-GB", {
+  return `${new Date(timestamp).toLocaleString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -30,7 +46,7 @@ const formatNoticeDate = (notice) => {
 
 const Notice = () => {
   const [notices, setNotices] = useState([]);
-  const [currentNotice, setCurrentNotice] = useState(0);
+  const [sortOrder, setSortOrder] = useState("latest");
   const [selectedNotice, setSelectedNotice] = useState(null);
 
   const handleOpenNotice = (notice) => {
@@ -42,19 +58,12 @@ const Notice = () => {
   };
 
   useEffect(() => {
-    // Fetch notices from the backend
     const fetchNotices = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/SingUpAdmin/allNotice"
-        ); // Adjust the endpoint based on your server
+        const response = await fetch("http://localhost:5000/SingUpAdmin/allNotice");
         const data = await response.json();
         if (data && Array.isArray(data)) {
-          const sortedNotices = [...data].sort(
-            (a, b) => getNoticeTimestamp(b) - getNoticeTimestamp(a)
-          );
-          setNotices(sortedNotices);
-          setCurrentNotice(0);
+          setNotices([...data]);
         }
       } catch (error) {
         console.error("Error fetching notices:", error);
@@ -64,101 +73,96 @@ const Notice = () => {
     fetchNotices();
   }, []);
 
-  useEffect(() => {
-    if (notices.length === 0) {
-      return undefined;
-    }
-    const interval = setInterval(() => {
-      setCurrentNotice((prev) => (prev + 1) % notices.length);
-    }, 5000); // Change notice every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [notices.length]);
+  const sortedNotices = [...notices].sort((a, b) => {
+    const diff = getNoticeTimestamp(b) - getNoticeTimestamp(a);
+    return sortOrder === "latest" ? diff : -diff;
+  });
 
   if (notices.length === 0) {
-    return <p>Loading notices...</p>;
+    return (
+      <section className="relative bg-[#F4F9FF] px-6 py-12 md:px-12 lg:px-24">
+        <div className="mx-auto max-w-7xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-lg font-medium text-slate-700">Loading notices...</p>
+        </div>
+      </section>
+    );
   }
-  const activeNotice = notices[currentNotice];
-  const activeNoticeDate = formatNoticeDate(activeNotice);
 
   return (
-    <section className="relative bg-[#F4F9FF] py-12 px-6 md:px-12 lg:px-24">
-      <div className="absolute top-6 left-6 w-12 h-12 bg-primary rounded-full blur-xl opacity-30 animate-pulse"></div>
-      <div className="absolute bottom-6 right-10 w-10 h-10 bg-red-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+    <section className="relative bg-[#F4F9FF] px-6 py-12 md:px-12 lg:px-24">
+      <div className="absolute left-6 top-6 h-12 w-12 rounded-full bg-primary opacity-30 blur-xl animate-pulse"></div>
+      <div className="absolute bottom-6 right-10 h-10 w-10 rounded-full bg-red-500 opacity-20 blur-xl animate-pulse"></div>
 
-      <div className="max-w-7xl mx-auto">
-        <div className="relative">
-          <button
-            onClick={() =>
-              setCurrentNotice(
-                (currentNotice - 1 + notices.length) % notices.length
-              )
-            }
-            className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-blue-200 bg-white/90 p-3 text-blue-600 shadow-lg hover:text-blue-800"
-            aria-label="Previous notice"
-          >
-            <FaArrowLeft className="text-xl" />
-          </button>
-
-          <button
-            onClick={() =>
-              setCurrentNotice((currentNotice + 1) % notices.length)
-            }
-            className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-blue-200 bg-white/90 p-3 text-blue-600 shadow-lg hover:text-blue-800"
-            aria-label="Next notice"
-          >
-            <FaArrowRight className="text-xl" />
-          </button>
-
-          <div className="bg-white rounded-xl shadow-2xl p-6 md:px-12 md:py-8 relative overflow-hidden transform hover:scale-105 transition-all duration-300">
-            <h3 className="text-secondary font-semibold text-sm uppercase tracking-widest text-center mb-4">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-secondary">
               <span>★</span> Important Notices <span>★</span>
             </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Browse all notices and stay informed about the latest updates and announcements from our society.
+            </p>
+          </div>
 
-            <div className="flex items-center justify-center gap-4">
-              {/* Notice Content */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-600" htmlFor="notice-sort">
+              Sort by
+            </label>
+            <select
+              id="notice-sort"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="rounded-full border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-primary"
+            >
+              <option value="latest">Latest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          {sortedNotices.map((notice) => {
+            const noticeDate = formatNoticeDate(notice);
+            return (
               <button
+                key={notice._id || notice.id}
                 type="button"
-                onClick={() => handleOpenNotice(notices[currentNotice])}
-                className="flex flex-1 flex-col md:flex-row items-start gap-8 min-w-0 text-left bg-transparent border-0 p-0 cursor-pointer"
+                onClick={() => handleOpenNotice(notice)}
+                className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg md:p-6"
               >
-                <img
-                  src={notices[currentNotice].imgUrl}
-                  alt="Notice"
-                  className="w-72 h-72 object-cover rounded-md shadow-lg flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0 text-center md:text-left">
-                  <h4 className="text-2xl font-semibold text-gray-900 mb-2">
-                    {notices[currentNotice].noticeTitle}
-                  </h4>
-                  <p className="text-lg text-gray-800 mb-4">
-                    {notices[currentNotice].description}
-                  </p>
-                  <p className="text-sm text-gray-600 italic">
-                    {notices[currentNotice].category}
-                  </p>
+                <div className="flex flex-col gap-5 md:flex-row md:items-start">
+                  <img
+                    src={notice.imgUrl}
+                    alt={notice.noticeTitle}
+                    className="h-48 w-full rounded-xl object-cover shadow-sm md:h-40 md:w-56"
+                  />
+
+                  <div className="flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+                        {notice.category || "Notice"}
+                      </span>
+                      {noticeDate ? (
+                        <span className="text-sm text-slate-500">{noticeDate}</span>
+                      ) : null}
+                    </div>
+                    <h4 className="text-xl font-semibold text-slate-900">
+                      {notice.noticeTitle}
+                    </h4>
+                    <p className="mt-3 text-base leading-7 text-slate-700">
+                      {notice.description}
+                    </p>
+                  </div>
                 </div>
               </button>
-            </div>
-            {activeNoticeDate ? (
-              <div className="absolute bottom-4 right-12 text-xs text-gray-600">
-                {activeNoticeDate}
-              </div>
-            ) : null}
-
-            {/* Notice Button */}
-            {/* <div className="mt-4 text-center">
-              <button className="bg-primary text-white px-6 py-3 rounded-full shadow-lg text-lg font-medium flex items-center justify-center gap-2 hover:scale-105 hover:shadow-xl transition-all duration-300 ease-in-out">
-                View All Notices <FaArrowRight className="text-lg" />
-              </button>
-            </div> */}
-          </div>
+            );
+          })}
         </div>
       </div>
 
       {selectedNotice ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
-          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <button
               type="button"
               onClick={handleCloseNotice}
@@ -177,14 +181,12 @@ const Notice = () => {
               {selectedNotice.noticeTitle}
             </h4>
             <p className="mb-4 text-sm text-gray-600 italic">
-              {selectedNotice.category}
+              {selectedNotice.category || "Notice"}
             </p>
             <p className="mb-4 whitespace-pre-line text-lg text-gray-800">
               {selectedNotice.description}
             </p>
-            <p className="text-sm text-gray-500">
-              {activeNoticeDate}
-            </p>
+            <p className="text-sm text-gray-500">{formatNoticeDate(selectedNotice)}</p>
           </div>
         </div>
       ) : null}

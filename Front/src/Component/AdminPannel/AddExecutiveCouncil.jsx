@@ -7,7 +7,7 @@ import ProfilePhotoPlaceholder from "../Common/ProfilePhotoPlaceholder";
 const AddExecutiveCouncil = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const emptyFormData = {
     fullName: "",
     email: "",
     mobile: "",
@@ -22,13 +22,16 @@ const AddExecutiveCouncil = () => {
     designation: "",
     startDate: "",
     endDate: "",
-  });
+  };
+
+  const [formData, setFormData] = useState({ ...emptyFormData });
 
   const [imagePreview, setImagePreview] = useState(null);
   const [passwordError, setPasswordError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [visible, setVisible] = useState(false);
   const [visibleR, setVisibleR] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -48,6 +51,14 @@ const AddExecutiveCouncil = () => {
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
+  };
+
+  const resetForm = () => {
+    setFormData({ ...emptyFormData });
+    setImagePreview(null);
+    setPasswordError("");
+    setFieldErrors({});
+    setFileInputKey(Date.now());
   };
 
   const validateFields = () => {
@@ -127,6 +138,7 @@ const AddExecutiveCouncil = () => {
       })
       .then((res) => {
         if (res.data.message === "Signup was successful!") {
+          resetForm();
           setVisible(true);
         } else {
           setVisibleR(true);
@@ -339,6 +351,7 @@ const AddExecutiveCouncil = () => {
             <label className="flex flex-col items-center justify-center px-6 py-4 border border-dashed border-gray-300 rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
               <ProfilePhotoPlaceholder className="mb-3 h-24 w-24" />
               <input
+                key={fileInputKey}
                 type="file"
                 name="profileImage"
                 accept="image/*"

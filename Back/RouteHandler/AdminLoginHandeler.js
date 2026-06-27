@@ -1271,6 +1271,7 @@ router.post("/addnotice", uploads.single("file"), async (req, res) => {
       description,
       category,
       imgUrl: imageUrl,
+      date: new Date(),
     });
 
     await newNotice.save();
@@ -1309,9 +1310,22 @@ router.post("/addnotice", uploads.single("file"), async (req, res) => {
 
 router.get("/allNotice", async (req, res) => {
   try {
-    const books = await Notice.find({}).sort({ date: -1, _id: -1 });
+    const books = await Notice.find({}).sort({ createdAt: -1, updatedAt: -1, date: -1, _id: -1 });
     if (books && books.length > 0) {
-      res.send(books);
+      const notices = books.map((notice) => {
+        const plainNotice = notice.toObject();
+        const rawDate = plainNotice.date || plainNotice.createdAt || plainNotice.updatedAt;
+        const fallbackDate = rawDate
+          ? new Date(rawDate)
+          : new Date(parseInt(plainNotice._id.toString().slice(0, 8), 16) * 1000);
+
+        plainNotice.displayDate = fallbackDate.toISOString();
+        return plainNotice;
+      });
+
+      res.send(notices);
+    } else {
+      res.status(200).json([]);
     }
   } catch (error) {
     res.status(200).json({

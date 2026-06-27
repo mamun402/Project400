@@ -19,7 +19,7 @@ const Login = () => {
   const [pendingApproval, setPendingApproval] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [login, setLogin] = useContext(userContext);
+  const { setLogin } = useContext(userContext);
 
   const navigate = useNavigate();
 

@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
 
+const createEmptyAlumniForm = () => ({
+  fullName: "",
+  email: "",
+  mobile: "",
+  whatsapp: "",
+  currentEmployer: "",
+  designation: "",
+  linkedin: "",
+  facebook: "",
+  profileImage: null,
+});
+
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -7,6 +19,7 @@ const StudentList = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showModal, setShowModal] = useState(false);
+
 
   useEffect(() => {
     fetch("http://localhost:5000/SingUpAdmin/Allmemberprofile", {
@@ -19,6 +32,7 @@ const StudentList = () => {
       .then((res) => res.json())
       .then((data) => setStudents(data))
       .catch((err) => console.error(err));
+
   }, []);
 
   const handlePromote = (student) => {
@@ -48,7 +62,6 @@ const StudentList = () => {
       .catch((err) => console.error(err));
   };
 
-
   const submitPromotion = () => {
     if (!position || !startDate || !endDate) {
       alert("Please fill all fields");
@@ -68,7 +81,6 @@ const StudentList = () => {
     )
       .then((res) => res.json())
       .then(() => {
-        // Update the students list by modifying the selected student's designation and dates
         setStudents((prevStudents) =>
           prevStudents.map((s) =>
             s.uniqueId === selectedStudent.uniqueId
@@ -81,6 +93,7 @@ const StudentList = () => {
       .catch((err) => console.error(err));
   };
 
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Members List</h2>
@@ -91,7 +104,6 @@ const StudentList = () => {
             <th className="border p-2">ID</th>
             <th className="border p-2">Batch</th>
             <th className="border p-2">Email</th>
-            {/* <th className="border p-2">Start - End</th> */}
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
@@ -103,11 +115,6 @@ const StudentList = () => {
                 <td className="border p-2">{student.id}</td>
                 <td className="border p-2">{student.batch}</td>
                 <td className="border p-2">{student.email || "N/A"}</td>
-                {/* <td className="border p-2">
-                {student.startDate && student.endDate
-                  ? `${student.startDate} - ${student.endDate}`
-                  : "N/A"}
-              </td> */}
                 <td className="border p-2 text-center">
                   <div className="flex flex-wrap gap-2 justify-center">
                     <button
@@ -148,9 +155,7 @@ const StudentList = () => {
               <option value="President">President</option>
               <option value="Treasurer">Treasurer</option>
               <option value="Student Advisor">Student Advisor</option>
-              <option value="Senior Vice President">
-                Senior Vice President
-              </option>
+              <option value="Senior Vice President">Senior Vice President</option>
               <option value="Vice President">Vice President</option>
               <option value="General Secretary">General Secretary</option>
               <option value="Joint Secretary">Joint Secretary</option>
@@ -158,25 +163,15 @@ const StudentList = () => {
               <option value="Student Secretary">Student Secretary</option>
               <option value="ACM Coordinator">ACM Coordinator</option>
               <option value="Office Secretary">Office Secretary</option>
-              <option value="Public Relations Secretary">
-                Public Relations Secretary
-              </option>
-              <option value="Publication Secretary">
-                Publication Secretary
-              </option>
+              <option value="Public Relations Secretary">Public Relations Secretary</option>
+              <option value="Publication Secretary">Publication Secretary</option>
               <option value="Resource Secretary">Resource Secretary</option>
-              <option value="Web & Design Secretary">
-                Web & Design Secretary
-              </option>
-              <option value="Cyber Security Coordinator">
-                Cyber Security Coordinator
-              </option>
+              <option value="Web & Design Secretary">Web & Design Secretary</option>
+              <option value="Cyber Security Coordinator">Cyber Security Coordinator</option>
               <option value="Sports Secretary">Sports Secretary</option>
               <option value="Cultural Secretary">Cultural Secretary</option>
               <option value="Finance Executive">Finance Executive</option>
-              <option value="Senior Executive Member">
-                Senior Executive Member
-              </option>
+              <option value="Senior Executive Member">Senior Executive Member</option>
               <option value="Executive Member">Executive Member</option>
             </select>
 
@@ -209,6 +204,7 @@ const StudentList = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

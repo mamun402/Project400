@@ -1,31 +1,43 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 const AddGalleryImage = () => {
-  const [info, setInfo] = useState({
+  const initialInfo = {
     title: "",
     description: "",
-  });
+  };
+
+  const [info, setInfo] = useState(initialInfo);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const handleBlur = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setInfo((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFile(file);
-    if (file) {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    if (selectedFile) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(null);
     }
+  };
+
+  const resetForm = () => {
+    setInfo({ ...initialInfo });
+    setFile(null);
+    setPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = (e) => {
@@ -50,6 +62,7 @@ const AddGalleryImage = () => {
       .then((response) => response.json())
       .then((response) => {
         if (response.msg === "Image added to gallery successfully") {
+          resetForm();
           setShowSuccessDialog(true);
           setTimeout(() => setShowSuccessDialog(false), 1500);
         }
@@ -89,8 +102,9 @@ const AddGalleryImage = () => {
             <input
               type="text"
               name="title"
+              value={info.title}
+              onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onBlur={handleBlur}
               placeholder="Enter Image Title"
               required
             />
@@ -101,8 +115,9 @@ const AddGalleryImage = () => {
             </label>
             <textarea
               name="description"
+              value={info.description}
+              onChange={handleChange}
               className="w-full px-4 h-32 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onBlur={handleBlur}
               placeholder="Enter Image Description"
               required
             />
@@ -131,6 +146,7 @@ const AddGalleryImage = () => {
                 />
               </svg>
               <input
+                ref={fileInputRef}
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}

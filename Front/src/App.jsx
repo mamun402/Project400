@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import { Route, Routes } from "react-router";
+import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import AddBlogs from "./Component/Account/Add/AddBlogs";
 import AddGallerys from "./Component/Account/Add/AddGallerys";
@@ -53,7 +53,7 @@ function App() {
   }, []);
   return (
     <userContext.Provider
-      value={[
+      value={{
         login,
         setLogin,
         formData,
@@ -62,7 +62,7 @@ function App() {
         setCheckAdminLogin,
         permissionsState,
         setPermissionsState,
-      ]}
+      }}
     >
       <Routes>
         <Route

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import img1 from "../Image/Galery/img1.jpg";
 import img2 from "../Image/Galery/img2.jpg";
 import img3 from "../Image/Galery/img3.jpg";

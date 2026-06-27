@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { userContext } from "../../App";
 const AdminLogin = () => {
-  const [checkadminlogin, setCheckAdminLogin] = useContext(userContext);
+  const { setCheckAdminLogin } = useContext(userContext);
   const [adminCredentials, setAdminCredentials] = useState({
     email: "",
     password: "",

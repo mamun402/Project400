@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
 
 const AddNotice = () => {
-  const [info, setInfo] = useState({
+  const initialInfo = {
     noticeTitle: "",
     description: "",
     category: "General",
-  });
+  };
+
+  const [info, setInfo] = useState(initialInfo);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -47,7 +49,7 @@ const AddNotice = () => {
   };
 
   const resetAfterSuccess = () => {
-    setInfo({ noticeTitle: "", description: "", category: "General" });
+    setInfo({ ...initialInfo });
     setFile(null);
     setPreview(null);
     setErrors({});

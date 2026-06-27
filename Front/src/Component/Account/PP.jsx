@@ -6,12 +6,12 @@ import {
   FaPhone,
   FaWhatsapp,
 } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { userContext } from "../../App";
 import ChangePassword from "./ChangePassword";
 import { phoneToWhatsAppPath } from "../Common/PhoneInput";
 const PP = ({ user }) => {
-  const [login, setLogin, permissionsState, setPermissionsState] =
+  const { setLogin, permissionsState, setPermissionsState } =
     useContext(userContext);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const designation = (user?.designation || "").trim().toLowerCase();
