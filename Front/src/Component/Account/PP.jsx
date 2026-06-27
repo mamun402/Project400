@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   FaEnvelope,
   FaFacebook,
@@ -8,9 +8,11 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router";
 import { userContext } from "../../App";
+import ChangePassword from "./ChangePassword";
 const PP = ({ user }) => {
   const [login, setLogin, permissionsState, setPermissionsState] =
     useContext(userContext);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const designation = (user?.designation || "").trim().toLowerCase();
   const hideStudentFields = [
     "chief patron",
@@ -69,6 +71,12 @@ const PP = ({ user }) => {
                 Edit Profile
               </button>
             </Link>
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="bg-secondary text-white px-8 py-4 rounded-full shadow-lg text-lg font-medium flex items-center gap-3 hover:scale-110 hover:shadow-xl transition-all duration-300 ease-in-out"
+            >
+              Change Password
+            </button>
           </div>
 
           {/* Contact Info */}
@@ -153,6 +161,14 @@ const PP = ({ user }) => {
           />
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <ChangePassword
+          userEmail={user?.email}
+          onClose={() => setShowChangePassword(false)}
+        />
+      )}
     </section>
   );
 };

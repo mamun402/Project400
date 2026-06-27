@@ -79,10 +79,21 @@ const userSchema = mongoose.Schema({
   endDate: {
     type: Date,
     required: false, // Optional field
-  }
-
+  },
   
- 
+  // Password change OTP fields
+  passwordChangeOTP: {
+    type: String,
+    required: false,
+  },
+  passwordChangeOTPExpires: {
+    type: Date,
+    required: false,
+  },
+  passwordChangeOTPVerified: {
+    type: Boolean,
+    default: false,
+  }
 });
 userSchema.plugin(uniqueValidator);
 module.exports = userSchema;
