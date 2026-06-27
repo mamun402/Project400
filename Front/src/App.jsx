@@ -36,6 +36,9 @@ function App() {
   const isAdminLoggedIn = localStorage.getItem("AdminLogin");
   const isLogin = localStorage.getItem("normaluser");
   const [permissionsState, setPermissionsState] = useState({});
+  
+  // Get admin login path from environment
+  const ADMIN_LOGIN_PATH = import.meta.env.VITE_ADMIN_LOGIN_PATH || '/secure/admin-panel-2024';
   useEffect(() => {
     const role = localStorage.getItem("designation");
 
@@ -277,7 +280,7 @@ function App() {
           }
         />
         <Route
-          path="/adminlogin"
+          path={ADMIN_LOGIN_PATH}
           element={
             <>
               {" "}

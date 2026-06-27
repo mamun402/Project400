@@ -11,6 +11,7 @@ const app = express();
 const path = require("path");
 dotenv.config();
 const port = 5000;
+
 // database connection
 mongoose.set('strictQuery', false);
 mongoose
